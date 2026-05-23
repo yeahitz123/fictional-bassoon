@@ -1,42 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>123's Moveset Maker</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>123 Emote Module Maker</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
-
-  <style>
+<style>
     body{
-      margin:0;
-      padding:0;
-      background:#000;
-      color:#d0e4ff;
-      font-family:'JetBrains Mono',monospace;
+        background:#0b0b0b;
+        color:white;
+        font-family:monospace;
+        padding:20px;
     }
 
-    iframe{
-      width:100%;
-      height:100vh;
-      border:none;
+    h1{
+        color:#66b3ff;
     }
 
-    .fallback{
-      padding:20px;
-      text-align:center;
+    textarea, input{
+        width:100%;
+        background:#111;
+        color:white;
+        border:1px solid #333;
+        padding:10px;
+        margin-top:5px;
+        margin-bottom:15px;
+        border-radius:8px;
+        box-sizing:border-box;
     }
-  </style>
+
+    button{
+        background:#1f6feb;
+        color:white;
+        border:none;
+        padding:12px;
+        border-radius:8px;
+        cursor:pointer;
+        width:100%;
+        font-size:16px;
+    }
+
+    button:hover{
+        opacity:0.9;
+    }
+
+    pre{
+        background:#111;
+        padding:15px;
+        border-radius:10px;
+        overflow:auto;
+        white-space:pre-wrap;
+        margin-top:20px;
+        border:1px solid #333;
+    }
+</style>
 </head>
 <body>
 
-<div class="fallback">
-  <h1>123's Moveset Maker</h1>
-  <p>Paste your full HTML below this section if needed.</p>
-</div>
+<h1>123 Emote Module Maker</h1>
 
-<!-- PASTE YOUR FULL HTML CONTENT HERE -->
+<label>Emote Name</label>
+<input id="name" placeholder="holdinghead">
+
+<label>Description</label>
+<input id="desc" placeholder="123 animated this">
+
+<label>.anim File</label>
+<input id="anim" placeholder="holdinghead.anim">
+
+<label>.mp3 File</label>
+<input id="mp3" placeholder="dont hide.mp3">
+
+<label>Music Name</label>
+<input id="musicname" placeholder="THANK 123 ;)">
+
+<label>Volume</label>
+<input id="volume" value="0.8">
+
+<label>Animation Speed</label>
+<input id="speed" value="1">
+
+<button onclick="generate()">Generate Module</button>
+
+<pre id="output"></pre>
+
+<script>
+function generate(){
+
+    let name = document.getElementById("name").value || "123";
+    let desc = document.getElementById("desc").value || "123 animated this";
+    let anim = document.getElementById("anim").value || "holdinghead.anim";
+    let mp3 = document.getElementById("mp3").value || "dont hide.mp3";
+    let musicname = document.getElementById("musicname").value || "THANK 123 ;)";
+    let volume = document.getElementById("volume").value || "0.8";
+    let speed = document.getElementById("speed").value || "1";
+
+    let lua = `local modules = {}
+
+table.insert(modules, function()
+    local m = {}
+
+    m.ModuleType  = "DANCE"
+    m.Name        = "${name}"
+    m.Description = "${desc}"
+    m.Assets = {"${anim}", "${mp3}"}
+
+    m.Config = function(parent)
+        Util_CreateText(parent, "No settings.", 14, Enum.TextXAlignment.Center)
+    end
+
+    m.SaveConfig = function() return {} end
+    m.LoadConfig = function(save) end
+
+    local animator = nil
+    local start = 0
+
+    m.Init = function(figure)
+        SetOverrideDanceMusic(
+            AssetGetContentId("${mp3}"),
+            "${musicname}",
+            ${volume},
+            NumberRange.new(0, 999)
+        )
+
+        start = os.clock()
+
+        animator = AnimLib.Animator.new()
+        animator.rig = figure
+        animator.track = AnimLib.Track.fromfile(
+            AssetGetPathFromFilename("${anim}")
+        )
+
+        animator.looped = true
+        animator.speed = ${speed}
+    end
+
+    m.Update = function(dt, figure)
+        animator:Step(os.clock() - start)
+    end
+
+    m.Destroy = function(figure)
+        animator = nil
+    end
+
+    return m
+end)
+
+return modules`;
+
+    document.getElementById("output").textContent = lua;
+}
+</script>
 
 </body>
 </html>
